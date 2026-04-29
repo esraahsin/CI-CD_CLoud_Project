@@ -74,7 +74,7 @@ resource "aws_security_group" "frontend" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # restrict to your IP in production
+    cidr_blocks = [var.ssh_cidr]
   }
 
   egress {

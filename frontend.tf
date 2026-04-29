@@ -7,7 +7,8 @@ resource "aws_instance" "frontend" {
   key_name                    = var.key_name != "" ? var.key_name : null
 
   user_data = base64encode(templatefile("${path.module}/user_data_frontend.sh", {
-    alb_dns = aws_lb.main.dns_name
+    alb_dns      = aws_lb.main.dns_name
+    frontend_repo = var.frontend_repo
   }))
 
   tags = { Name = "frontend-instance" }

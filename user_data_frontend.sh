@@ -2,9 +2,8 @@
 apt update -y
 apt install -y nginx git
 
-# Replace this block with your actual frontend files
 cd /home/ubuntu
-git clone <YOUR_FRONTEND_REPO> frontend
+git clone ${frontend_repo} frontend
 cp -r frontend/* /var/www/html/
 
 # Inject the ALB DNS into the JS config so the frontend calls the right backend

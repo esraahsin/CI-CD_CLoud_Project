@@ -14,7 +14,7 @@ resource "aws_db_instance" "main" {
   password               = var.db_password
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.rds.id]
-  skip_final_snapshot    = true  # important for sandbox teardown
+  skip_final_snapshot    = var.skip_final_snapshot
   multi_az               = false # save time in sandbox
   publicly_accessible    = false
 }
