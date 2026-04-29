@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Todo App</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>📝 Todo List</h1>
+
+    <form id="todo-form">
+      <input
+        type="text"
+        id="todo-input"
+        placeholder="What needs to be done?"
+        autocomplete="off"
+        required
+      />
+      <button type="submit">Add</button>
+    </form>
+
+    <ul id="todo-list"></ul>
+
+    <p id="error-msg" class="error hidden"></p>
+  </div>
+
+  <!-- config.js must come first — it sets API_BASE -->
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "todo-backend",
+  "version": "1.0.0",
+  "description": "Node.js/Express REST API for the Todo app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.4.1",
+    "mysql2": "^3.6.0"
+  }
+}

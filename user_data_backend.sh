@@ -6,8 +6,8 @@ apt install -y git nodejs npm
 npm install -g pm2
 
 cd /home/ubuntu
-git clone ${github_repo} app
-cd app
+git clone ${github_repo} repo
+cd repo/app/backend
 
 npm install
 
