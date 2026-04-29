@@ -34,8 +34,55 @@ project/
 ├── asg.tf                  # Launch Template, ASG, CPU scaling policy
 ├── frontend.tf             # single public EC2 for the frontend
 ├── user_data_backend.sh    # bootstraps Node.js app on backend instances
-└── user_data_frontend.sh   # bootstraps Nginx + frontend on the public EC2
+├── user_data_frontend.sh   # bootstraps Nginx + frontend on the public EC2
+├── app/
+│   ├── backend/            # Node.js + Express REST API (Todo app)
+│   │   ├── package.json
+│   │   └── server.js
+│   └── frontend/           # Static HTML/CSS/JS frontend (served by Nginx)
+│       ├── index.html
+│       ├── config.js       # API_BASE placeholder replaced at EC2 boot
+│       ├── style.css
+│       └── app.js
 ```
+
+## Application
+
+The `app/` directory contains a simple **Todo List** full-stack application.
+
+### Backend (`app/backend/`)
+
+- **Runtime:** Node.js 18+
+- **Framework:** Express
+- **Database:** MySQL (RDS) via `mysql2`
+- **Port:** `3000` (set via `PORT` env var)
+- **Env vars injected at boot by `user_data_backend.sh`:**
+
+| Variable | Description |
+|---|---|
+| `DB_HOST` | RDS endpoint |
+| `DB_PASS` | RDS master password |
+| `PORT` | Listening port (default `3000`) |
+
+**Endpoints:**
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/health` | Health check |
+| `GET` | `/api/todos` | List all todos |
+| `POST` | `/api/todos` | Create a todo `{ "title": "..." }` |
+| `PATCH` | `/api/todos/:id` | Toggle `{ "completed": true\|false }` |
+| `DELETE` | `/api/todos/:id` | Delete a todo |
+
+The server creates the `todos` table automatically on first start.
+
+### Frontend (`app/frontend/`)
+
+Pure HTML/CSS/JS — served statically by Nginx on the public EC2.
+
+`config.js` contains the placeholder `__ALB_DNS__` which
+`user_data_frontend.sh` replaces with the real ALB DNS name at boot time,
+so every API call is directed to the correct backend.
 
 ## Prerequisites
 
@@ -58,11 +105,17 @@ export AWS_SESSION_TOKEN=...   # required for sandbox/temporary credentials
 terraform init
 
 # 3. Apply — supply your variable values
+#    Point github_repo and frontend_repo at the app/ sub-directories in this repo
 terraform apply \
   -var="db_password=MySecret123!" \
-  -var="github_repo=https://github.com/yourname/yourrepo.git" \
+  -var="github_repo=https://github.com/esraahsin/CI-CD_CLoud_Project.git" \
+  -var="frontend_repo=https://github.com/esraahsin/CI-CD_CLoud_Project.git" \
   -var="key_name=your-key-pair-name"
 ```
+
+> **Note:** Both `user_data_backend.sh` and `user_data_frontend.sh` clone the full
+> repo and then use the relevant sub-directory (`app/backend` or `app/frontend`).
+> If you split the app into its own repository, update the clone URLs accordingly.
 
 `terraform apply` takes roughly **8–12 minutes** (RDS and NAT Gateway are the slowest parts).
 

@@ -1,0 +1,117 @@
+/* ── Reset & base ────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #f0f2f5;
+  color: #333;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3rem 1rem;
+}
+
+/* ── Card ────────────────────────────────────────────────────────────────── */
+.container {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.08);
+  padding: 2rem;
+  width: 100%;
+  max-width: 520px;
+}
+
+h1 {
+  font-size: 1.6rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* ── Form ────────────────────────────────────────────────────────────────── */
+#todo-form {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: 1.5rem;
+}
+
+#todo-input {
+  flex: 1;
+  padding: .6rem .9rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color .2s;
+}
+
+#todo-input:focus { border-color: #6366f1; }
+
+button[type="submit"] {
+  padding: .6rem 1.2rem;
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+button[type="submit"]:hover { background: #4f46e5; }
+
+/* ── List ────────────────────────────────────────────────────────────────── */
+#todo-list { list-style: none; }
+
+#todo-list li {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .75rem .5rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+#todo-list li:last-child { border-bottom: none; }
+
+#todo-list li input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #6366f1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.todo-title {
+  flex: 1;
+  font-size: .95rem;
+  transition: color .2s, text-decoration .2s;
+}
+
+.todo-title.done {
+  text-decoration: line-through;
+  color: #9ca3af;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ef4444;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: .2rem .4rem;
+  border-radius: 6px;
+  transition: background .15s;
+}
+
+.delete-btn:hover { background: #fee2e2; }
+
+/* ── Error ───────────────────────────────────────────────────────────────── */
+.error {
+  color: #ef4444;
+  font-size: .875rem;
+  margin-top: .75rem;
+  text-align: center;
+}
+
+.hidden { display: none; }
