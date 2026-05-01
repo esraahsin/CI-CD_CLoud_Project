@@ -1,6 +1,6 @@
 # ALB: accepts HTTP from anywhere
 resource "aws_security_group" "alb" {
-  name   = "sg-alb"
+  name   = "alb-sg"
   vpc_id = aws_vpc.main.id
 
   ingress {
@@ -20,7 +20,7 @@ resource "aws_security_group" "alb" {
 
 # Backend EC2: accepts traffic only from ALB
 resource "aws_security_group" "backend" {
-  name   = "sg-backend"
+  name   = "backend-sg"
   vpc_id = aws_vpc.main.id
 
   ingress {
@@ -40,7 +40,7 @@ resource "aws_security_group" "backend" {
 
 # RDS: accepts traffic only from backend EC2
 resource "aws_security_group" "rds" {
-  name   = "sg-rds"
+  name   = "rds-sg"
   vpc_id = aws_vpc.main.id
 
   ingress {
@@ -60,7 +60,7 @@ resource "aws_security_group" "rds" {
 
 # Frontend EC2: HTTP from anywhere, SSH optional
 resource "aws_security_group" "frontend" {
-  name   = "sg-frontend"
+  name   = "frontend-sg"
   vpc_id = aws_vpc.main.id
 
   ingress {

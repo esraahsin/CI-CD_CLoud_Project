@@ -1,6 +1,6 @@
 data "aws_ami" "ubuntu" {
   most_recent = true
-  owners      = ["099720109477"] # Canonical
+  owners      = ["099720109477"]
 
   filter {
     name   = "name"
@@ -32,11 +32,17 @@ resource "aws_launch_template" "backend" {
 }
 
 resource "aws_autoscaling_group" "backend" {
-  name                = "project-asg"
-  desired_capacity    = 2
-  min_size            = 2
-  max_size            = 4
-  vpc_zone_identifier = [aws_subnet.private_a.id, aws_subnet.private_b.id]
+  name                      = "project-asg"
+  desired_capacity          = 2
+  min_size                  = 2
+  max_size                  = 4
+  vpc_zone_identifier       = [aws_subnet.private_a.id, aws_subnet.private_b.id]
+
+  # Donne 10 minutes aux instances pour finir leur User Data avant
+  # que l'ALB commence les health checks — critique pour éviter
+  # que les instances soient tuées pendant l'installation de Node.js
+  health_check_grace_period = 600
+  health_check_type         = "ELB"
 
   launch_template {
     id      = aws_launch_template.backend.id
@@ -44,7 +50,6 @@ resource "aws_autoscaling_group" "backend" {
   }
 
   target_group_arns = [aws_lb_target_group.backend.arn]
-  health_check_type = "ELB"
 
   tag {
     key                 = "Name"
