@@ -71,6 +71,41 @@ resource "aws_security_group" "frontend" {
   }
 
   ingress {
+    from_port   = 22 #ssh
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.ssh_cidr]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+# ELK EC2: Kibana from anywhere, ES only from backend SG
+resource "aws_security_group" "elk" {
+  name   = "elk-sg"
+  vpc_id = aws_vpc.main.id
+
+  # Kibana — open to the internet so you can view dashboards
+  ingress {
+    from_port   = 5601
+    to_port     = 5601
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Elasticsearch — only reachable from backend EC2s (private)
+  ingress {
+    from_port       = 9200
+    to_port         = 9200
+    protocol        = "tcp"
+    security_groups = [aws_security_group.backend.id]
+  }
+
+  ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"

@@ -4,18 +4,95 @@ const express   = require('express');
 const cors      = require('cors');
 const mysql     = require('mysql2/promise');
 const rateLimit = require('express-rate-limit');
+const { Client } = require('@elastic/elasticsearch');
 
 const PORT      = process.env.PORT      || 3000;
 const DB_HOST   = process.env.DB_HOST   || 'localhost';
 const DB_PASS   = process.env.DB_PASS   || '';
 const DB_USER   = process.env.DB_USER   || 'admin';
 const DB_NAME   = process.env.DB_NAME   || 'appdb';
+const ELK_HOST  = process.env.ELK_HOST  || null;
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Apply rate limiting to all API routes (100 requests per minute per IP)
+// ── Elasticsearch client (optional — app works fine if ES is unavailable) ──
+
+let esClient = null;
+
+if (ELK_HOST) {
+  esClient = new Client({ node: `http://${ELK_HOST}:9200` });
+  console.log(`Elasticsearch logging enabled → http://${ELK_HOST}:9200`);
+} else {
+  console.log('ELK_HOST not set — Elasticsearch logging disabled.');
+}
+
+// ── ECS log builder ───────────────────────────────────────────────────────
+
+function createEcsLog(req, res, durationMs) {
+  const status = res.statusCode;
+  return {
+    '@timestamp': new Date().toISOString(),
+    'source_type': 'todo-app',
+    'event': {
+      'dataset':  'todo-app',
+      'kind':     'event',
+      'category': 'web',
+      'type':     'access',
+      'action':   req.method.toLowerCase(),
+      'outcome':  status < 400 ? 'success' : 'failure',
+      'duration': durationMs,
+    },
+    'http': {
+      'request':  { 'method': req.method },
+      'response': { 'status_code': status },
+    },
+    'url': {
+      'path':     req.path,
+      'original': req.originalUrl,
+    },
+    'source': {
+      // Respect X-Forwarded-For from ALB
+      'ip': req.headers['x-forwarded-for']?.split(',')[0].trim()
+           || req.socket.remoteAddress,
+    },
+    'user_agent': {
+      'original': req.headers['user-agent'] || null,
+    },
+  };
+}
+
+// ── ECS logging middleware ────────────────────────────────────────────────
+
+function ecsLogger(req, res, next) {
+  if (!esClient) return next();
+
+  const start = Date.now();
+
+  res.on('finish', () => {
+    // Skip health checks to avoid noise
+    if (req.path === '/health') return;
+
+    const log = createEcsLog(req, res, Date.now() - start);
+    const today = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
+
+    // Fire-and-forget: ES failures never affect the app
+    esClient.index({
+      index: `todo-app-${today}`,
+      document: log,
+    }).catch(err => {
+      console.error('ES log error:', err.message);
+    });
+  });
+
+  next();
+}
+
+app.use(ecsLogger);
+
+// ── Rate limiting ─────────────────────────────────────────────────────────
+
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 100,
@@ -25,7 +102,7 @@ const apiLimiter = rateLimit({
 });
 app.use('/api/', apiLimiter);
 
-// ── Database setup ────────────────────────────────────────────────────────────
+// ── Database setup ────────────────────────────────────────────────────────
 
 let pool;
 
@@ -49,12 +126,10 @@ async function initDB() {
   `);
 }
 
-// ── Routes ────────────────────────────────────────────────────────────────────
+// ── Routes ────────────────────────────────────────────────────────────────
 
-// Health check
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
-// List all todos
 app.get('/api/todos', async (_req, res) => {
   try {
     const [rows] = await pool.execute('SELECT * FROM todos ORDER BY created_at DESC');
@@ -65,7 +140,6 @@ app.get('/api/todos', async (_req, res) => {
   }
 });
 
-// Create a todo
 app.post('/api/todos', async (req, res) => {
   const { title } = req.body;
   if (!title || !title.trim()) {
@@ -84,7 +158,6 @@ app.post('/api/todos', async (req, res) => {
   }
 });
 
-// Toggle completed
 app.patch('/api/todos/:id', async (req, res) => {
   const { id } = req.params;
   const { completed } = req.body;
@@ -107,7 +180,6 @@ app.patch('/api/todos/:id', async (req, res) => {
   }
 });
 
-// Delete a todo
 app.delete('/api/todos/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -122,7 +194,7 @@ app.delete('/api/todos/:id', async (req, res) => {
   }
 });
 
-// ── Start ─────────────────────────────────────────────────────────────────────
+// ── Start ─────────────────────────────────────────────────────────────────
 
 initDB()
   .then(() => {

@@ -1,3 +1,4 @@
+# create the application load balancer 
 resource "aws_lb" "main" {
   name               = "project-alb"
   internal           = false

@@ -30,7 +30,7 @@ export DB_PASS="${db_password}"
 export DB_USER="admin"
 export DB_NAME="appdb"
 export PORT="3000"
-
+export ELK_HOST="${elk_host}" 
 # Démarre l'application avec PM2
 pm2 start npm --name "app" -- start
 

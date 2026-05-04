@@ -24,7 +24,12 @@ resource "aws_launch_template" "backend" {
     db_password = var.db_password
     github_repo = var.github_repo
   }))
-
+  user_data = base64encode(templatefile("${path.module}/user_data_backend.sh", {
+    db_host     = aws_db_instance.main.address
+    db_password = var.db_password
+    github_repo = var.github_repo
+    elk_host    = aws_instance.elk.private_ip   # ← add this line
+  }))
   tag_specifications {
     resource_type = "instance"
     tags = { Name = "backend-instance" }

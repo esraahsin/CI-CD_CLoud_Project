@@ -35,3 +35,8 @@ variable "skip_final_snapshot" {
   type        = bool
   default     = true
 }
+variable "elk_instance_type" {
+  description = "EC2 instance type for the ELK stack (t3.medium minimum for Elasticsearch)"
+  type        = string
+  default     = "t3.medium"
+}
